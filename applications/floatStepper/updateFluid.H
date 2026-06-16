@@ -7,6 +7,8 @@ while (pimple.loop())
     #include "alphaControls.H"
     #include "alphaEqnSubCycle.H"
 
+    relaxing.correct();
+
     mixture.correct();
 
     #include "UEqn.H"

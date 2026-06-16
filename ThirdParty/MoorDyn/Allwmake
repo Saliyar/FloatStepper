@@ -9,14 +9,43 @@ set -e
 git submodule init
 git submodule update --remote
 
+# ---------------------------------------------------------------------------
+# Patch MoorDyn v1: add flush() after every output write so data reaches
+# disk immediately rather than sitting in C++ stream buffers.
+# Without these, Line*.out and Lines.out files contain only headers.
+# Idempotent: grep checks skip the sed if already patched.
+# ---------------------------------------------------------------------------
+MOORDYN_V1=submodules/MoorDyn_v1
+
+# Line.cpp: flush after column-header row, units row, and each data row
+grep -q "outfile->flush" $MOORDYN_V1/Line.cpp || \
+    sed -i 's/\*outfile << "\\n";/\*outfile << "\\n";\n\t\t\toutfile->flush();/g' \
+        $MOORDYN_V1/Line.cpp
+
+# MoorDyn.cpp: flush Lines.out after each data row in AllOutput
+grep -q "outfileMain.flush" $MOORDYN_V1/MoorDyn.cpp || \
+    sed -i 's/\t\toutfileMain << "\\n";/\t\toutfileMain << "\\n";\n\t\toutfileMain.flush();/' \
+        $MOORDYN_V1/MoorDyn.cpp
+
+# MoorDyn.cpp: fix ANCHTEN bug — dummy.OType = 2 was accidentally placed on
+# the same line as a //cout comment, making it dead code.  Without OType set,
+# GetOutput() receives garbage and crashes before Line::Output() is called,
+# so data rows are never written even though headers are.
+grep -q '"found anchtoen" << endl;dummy.OType = 2;' $MOORDYN_V1/MoorDyn.cpp && \
+    sed -i 's|"found anchtoen" << endl;dummy.OType = 2;|"found anchtoen" << endl;\n\t\t\t\t\tdummy.OType = 2;|' \
+        $MOORDYN_V1/MoorDyn.cpp
+# ---------------------------------------------------------------------------
+
 echo "=========================================="
 echo "           Compiling MoorDyn_v1           "
 echo "=========================================="
 cd submodules/MoorDyn_v1/compileSO/;
+rm -f *.o *.so
 make
-mv MoorDyn.so $FOAM_USER_LIBBIN/libmoordyn_v1.so
-echo "Compilation done! Library location:"
-echo "$FOAM_USER_LIBBIN/libmoordyn_v1.so"
+LIBDEST="${FOAM_USER_LIBBIN:-$WM_PROJECT_USER_DIR/platforms/$WM_OPTIONS/lib}"
+mkdir -p "$LIBDEST"
+cp MoorDyn.so "$LIBDEST/libmoordyn_v1.so"
+echo "Compilation done! Library location: $LIBDEST/libmoordyn_v1.so"
 cd ../../
 
 echo "=========================================="
@@ -27,15 +56,30 @@ cd MoorDyn.build
 cmake -DBUILD_TESTING=OFF -DEXTERNAL_EIGEN=OFF -DFORTRAN_WRAPPER=OFF -DMATLAB_WRAPPER=OFF -DPYTHON_WRAPPER=OFF -DUSE_VTK=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=. ../MoorDyn
 CMAKE_RESULT=$?
 make -j
-make install #Note: Placing header files in MoorDyn.build/include/moordyn where they are used by the OpenFOAM library
+make install
 mv source/libmoordyn.so* $FOAM_USER_LIBBIN
 cd ../..
 
 echo "==============================================="
 echo "    COMPILE MoorDyn-FloatStepper extension     "
 echo "==============================================="
-echo "compile FloatStepper mooring restraints"
 (cd src && wmake libso )
+
+# ---------------------------------------------------------------------------
+# Fix RPATH of libmoorDynForFloatStepper.so so it finds libmoordyn_v1.so
+# from the user lib directory at runtime.  Without this, the wrapper library
+# only searches the system ThirdParty paths (which don't contain our build)
+# and the output files are never written.
+# patchelf --add-rpath converts RPATH to RUNPATH and appends our path.
+# Idempotent: the grep check skips it if the path is already present.
+# ---------------------------------------------------------------------------
+WRAPPER="$LIBDEST/libmoorDynForFloatStepper.so"
+if [ -f "$WRAPPER" ]; then
+    objdump -p "$WRAPPER" | grep -q "$LIBDEST" || \
+        patchelf --add-rpath "$LIBDEST" "$WRAPPER"
+    echo "RUNPATH of $WRAPPER updated to include $LIBDEST"
+fi
+# ---------------------------------------------------------------------------
 
 echo "================="
 echo "Compilation done!"

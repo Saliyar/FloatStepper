@@ -138,6 +138,8 @@ mesh.setFluxRequired(alpha1.name());
 
 isoAdvection advector(alpha1, phi, U);
 
+relaxationZone relaxing(mesh, U, alpha1);
+
 // Handle to all floaters
 UPtrList<floaterMeshMotionSolver> bodySolvers;
 for (auto& solver : mesh.lookupClass<floaterMeshMotionSolver>())

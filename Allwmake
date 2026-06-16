@@ -8,6 +8,38 @@ else
     wcmd="wmake"
 fi
 
+# ============================================================================
+# Build/Clean ThirdParty dependencies (MoorDyn v1 and v2)
+# ============================================================================
+echo "========================================"
+if [ "$wcmd" = "wmake" ]; then
+    echo "  Building ThirdParty (MoorDyn)"
+else
+    echo "  Cleaning ThirdParty (MoorDyn)"
+fi
+echo "========================================"
+cd ThirdParty/MoorDyn
+if [ "$wcmd" = "wmake" ]; then
+    ./Allwmake
+else
+    ./Allwclean
+fi
+if [ $? -ne 0 ]; then
+    if [ "$wcmd" = "wmake" ]; then
+        echo "ERROR: ThirdParty build failed"
+        exit 1
+    else
+        echo "WARNING: ThirdParty clean had issues, continuing"
+    fi
+fi
+cd ../..
+
+echo ""
+echo "========================================"
+echo "  ${wcmd}ing floatStepperWaveFoam"
+echo "========================================"
+
+
 $wcmd "$@" src/functionObjects/forceContributions
 $wcmd "$@" src/addedMass
 $wcmd "$@" src/floaterMotion

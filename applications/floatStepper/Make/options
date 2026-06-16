@@ -19,7 +19,12 @@ EXE_INC = \
     -I$(LIB_SRC)/TurbulenceModels/phaseIncompressible/lnInclude \
     -I$(LIB_SRC)/transportModels/immiscibleIncompressibleTwoPhaseMixture/lnInclude \
     -I../../src/floaterMotion/lnInclude \
-    -I../../src/addedMass/lnInclude
+    -I../../src/addedMass/lnInclude \
+    \
+    -I../../../../../src/waves2Foam/lnInclude \
+    -I../../../../../src/waves2FoamGABC/lnInclude \
+    -I../../../../../src/waves2FoamSampling2412/lnInclude
+
 
 
 EXE_LIBS = \
@@ -41,4 +46,14 @@ EXE_LIBS = \
     -lincompressibleInterPhaseTransportModels \
     -L$(FOAM_USER_LIBBIN) \
     -lfloaterMotion \
-    -laddedMass
+    -laddedMass \
+    \
+    -lwaveModels \
+    -L../../../platforms/linux64GccDPInt32Opt/lib \
+    -lwaves2Foam \
+    -lwaves2FoamGABC \
+    -lwaves2FoamSampling \
+    -L$(WAVES_GSL_LIB) \
+    -lgsl \
+    -lgslcblas
+
