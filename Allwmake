@@ -9,15 +9,27 @@ else
 fi
 
 # ============================================================================
-# Build/Clean ThirdParty dependencies (MoorDyn v1 and v2)
+# Build/Clean floatStepperWaveFoam/src libraries FIRST (creates lnInclude)
 # ============================================================================
 echo "========================================"
-if [ "$wcmd" = "wmake" ]; then
-    echo "  Building ThirdParty (MoorDyn)"
-else
-    echo "  Cleaning ThirdParty (MoorDyn)"
-fi
+echo "  ${wcmd}ing src libraries"
 echo "========================================"
+
+$wcmd "$@" src/functionObjects/forceContributions
+$wcmd "$@" src/addedMass
+$wcmd "$@" src/floaterMotion
+$wcmd "$@" src/functionObjects/floaterStateWriter
+$wcmd "$@" src/functionObjects/sixDoFRigidBodyStateWriter
+$wcmd "$@" src/functionObjects/addedMassWriter
+$wcmd "$@" src/waveMakerMotionSolver
+
+# ============================================================================
+# Build/Clean ThirdParty (MoorDyn v1 and v2 wrapper)
+# ============================================================================
+echo "========================================"
+echo "  ${wcmd}ing ThirdParty (MoorDyn)"
+echo "========================================"
+
 cd ThirdParty/MoorDyn
 if [ "$wcmd" = "wmake" ]; then
     ./Allwmake
@@ -32,21 +44,16 @@ if [ $? -ne 0 ]; then
         echo "WARNING: ThirdParty clean had issues, continuing"
     fi
 fi
+
 cd ../..
 
-echo ""
+# ============================================================================
+# Build/Clean applications
+# ============================================================================
 echo "========================================"
-echo "  ${wcmd}ing floatStepperWaveFoam"
+echo "  ${wcmd}ing applications"
 echo "========================================"
 
-
-$wcmd "$@" src/functionObjects/forceContributions
-$wcmd "$@" src/addedMass
-$wcmd "$@" src/floaterMotion
-$wcmd "$@" src/functionObjects/floaterStateWriter
-$wcmd "$@" src/functionObjects/sixDoFRigidBodyStateWriter
-$wcmd "$@" src/functionObjects/addedMassWriter
-$wcmd "$@" src/waveMakerMotionSolver
 $wcmd "$@" applications/floatStepper
 $wcmd "$@" applications/util/joukowskiTransformPoints
 $wcmd "$@" applications/util/floaterInertia
