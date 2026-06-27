@@ -107,8 +107,23 @@ int main(int argc, char *argv[])
         )
     );
 
+    // Create externalWaveForcing BEFORE createFields (needed by relaxationZone)
+    autoPtr<Foam::waveTheories::externalWaveForcing> externalWave =
+        Foam::waveTheories::externalWaveForcing::New
+        (
+            IOobject
+            (
+                "externalWaveForcing",
+                runTime.constant(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            runTime,
+            mesh
+        );
+
     #include "createFields.H"
-    #include "createExternalWaveForcing.H"
 
 
   
