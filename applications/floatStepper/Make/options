@@ -1,4 +1,5 @@
 EXE_INC = \
+    -DFLOATSTEPPER_WAVES2FOAM \
     -I../VoF \
     -IzeroTimeStep \
     -I$(LIB_SRC)/phaseSystemModels/twoPhaseInter/incompressibleInterPhaseTransportModel/lnInclude \

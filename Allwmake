@@ -55,6 +55,7 @@ echo "  ${wcmd}ing applications"
 echo "========================================"
 
 $wcmd "$@" applications/floatStepper
+$wcmd "$@" applications/floatStepperPlain
 $wcmd "$@" applications/util/joukowskiTransformPoints
 $wcmd "$@" applications/util/floaterInertia
 $wcmd "$@" applications/util/KirchhoffKelvinIntegrator2D

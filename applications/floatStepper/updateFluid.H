@@ -7,7 +7,9 @@ while (pimple.loop())
     #include "alphaControls.H"
     #include "alphaEqnSubCycle.H"
 
+#ifdef FLOATSTEPPER_WAVES2FOAM
     relaxing.correct();
+#endif
 
     mixture.correct();
 

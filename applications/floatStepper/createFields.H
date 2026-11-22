@@ -138,7 +138,9 @@ mesh.setFluxRequired(alpha1.name());
 
 isoAdvection advector(alpha1, phi, U);
 
+#ifdef FLOATSTEPPER_WAVES2FOAM
 relaxationZone relaxing(mesh, U, alpha1);
+#endif
 
 // Handle to all floaters
 UPtrList<floaterMeshMotionSolver> bodySolvers;
