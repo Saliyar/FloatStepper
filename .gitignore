@@ -46,3 +46,8 @@ log.*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Build folders created by Allwmake #
+#####################################
+ThirdParty/MoorDyn/submodules/MoorDyn.build/
+applications/floatStepperPlain/Make/floatStepper/
