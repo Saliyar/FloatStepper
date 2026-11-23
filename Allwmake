@@ -9,7 +9,7 @@ else
 fi
 
 # ============================================================================
-# Build/Clean floatStepperWaveFoam/src libraries FIRST (creates lnInclude)
+# Build/Clean FloatStepper/src libraries FIRST (creates lnInclude)
 # ============================================================================
 echo "========================================"
 echo "  ${wcmd}ing src libraries"

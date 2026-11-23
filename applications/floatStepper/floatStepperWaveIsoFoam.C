@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
         #include "setInitialDeltaT.H"
     }
 
-    Info << "Starting floatStepperWaveFoam solver" << endl;
+    Info << "Starting floatStepperWaveIsoFoam solver" << endl;
     Info<< "\nStarting time loop\n" << endl;
 
     while (runTime.run())
