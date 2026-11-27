@@ -153,6 +153,24 @@ void Foam::floaterMotionRestraints::moorDynR1::restrain
         //LinesInit(&CoM[0], &v[0]);
         // Info<< "X[6]: " << vector(X[0], X[1], X[2]) << ", " << vector(X[3], X[4], X[5]) << endl;
 
+        if (motion.time().startTimeIndex() > 0)
+        {
+            if (!allowStaticRestart_)
+            {
+                FatalErrorInFunction
+                    << "Restart at t = " << motion.time().startTime().value()
+                    << ": MoorDyn v1 cannot save or load its state, so the"
+                    << " lines would start again from static equilibrium."
+                    << " Use moorDynR2 for an exact restart, or set"
+                    << " allowStaticRestart true in restraint " << name()
+                    << " to accept this." << exit(FatalError);
+            }
+            WarningInFunction
+                << "Restart at t = " << motion.time().startTime().value()
+                << ": MoorDyn v1 lines re-initialised from static equilibrium"
+                << " (v1 has no state save)" << endl;
+        }
+
         LinesInit(X, XD);
         Info << "MoorDyn module initialized!" << endl;
         initialized_ = true;
@@ -211,6 +229,9 @@ bool Foam::floaterMotionRestraints::moorDynR1::read
 )
 {
     floaterMotionRestraint::read(rBMRDict);
+
+    allowStaticRestart_ =
+        rBMRCoeffs_.getOrDefault<Switch>("allowStaticRestart", false);
 
     return true;
 }

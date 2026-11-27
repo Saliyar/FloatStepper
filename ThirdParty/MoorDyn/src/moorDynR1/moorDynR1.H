@@ -70,6 +70,10 @@ class moorDynR1
     //- Initialize MoorDyn at the first time step ()
     mutable bool initialized_;
 
+    //- Allow a restart (MoorDyn v1 cannot save its state, so the lines
+    //  restart from static equilibrium); stop otherwise (default)
+    bool allowStaticRestart_;
+
 
 public:
 
