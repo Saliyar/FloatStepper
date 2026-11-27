@@ -51,6 +51,7 @@ SourceFiles
 #include "floaterMotionRestraint.H"
 #include "IFstream.H"
 #include "OFstream.H"
+#include "DynamicList.H"
 
 #include "MoorDyn2.h"
 
@@ -81,7 +82,7 @@ class moorDynR2
         //- Number of coupling Dofs
         // 'POINT': nCouplingDof_ = 3 x npoints
         // 'BODY': nCouplingDof_ = 6 (1 body only)
-        label nCouplingDof_;
+        mutable label nCouplingDof_;
 
         //- Reference point of attachment to the solid body
         pointField refAttachmentPt_;
@@ -117,11 +118,19 @@ class moorDynR2
         //  from static equilibrium (warning) instead of stopping (default)
         bool allowStaticRestart_;
 
-        // The MoorDyn system instance
-        MoorDyn moordyn_;
-        
+        //- Restart time (-1: fresh start)
+        mutable scalar restartTime_;
+
+        //- MoorDyn output files (.out) whose rows up to the restart time are
+        //  kept in <file>.prev and merged back in front at the end of the run
+        mutable DynamicList<fileName> keptOutputs_;
+
+        // The MoorDyn system instance (created at the first restrain() call,
+        // when the start time is known)
+        mutable MoorDyn moordyn_;
+
         // The coupled body to be controlled by this MoorDyn instance
-        MoorDynBody moordyn_body_;
+        mutable MoorDynBody moordyn_body_;
         
         // A backup of the Mooring system to can restore in between implicit time
         // steps
@@ -184,6 +193,19 @@ class moorDynR2
         {
             return root/timeName/"uniform"/"moorDyn"/(name() + ".dat");
         }
+
+        //- Create the MoorDyn system from inputFile_ and check the coupling
+        void createMoorDyn() const;
+
+        //- Restart: before MoorDyn truncates its .out files, keep their rows
+        //  up to time t0 (and those of an unmerged <file>.prev) in <file>.prev
+        void keepOutputs(const scalar t0) const;
+
+        //- End of a restarted run: <file> = <file>.prev rows + new rows
+        void mergeOutputs() const;
+
+        //- Restart: number of VTK files written up to time t0
+        label countVTK(const scalar t0) const;
 
         //- PVD file name
         inline fileName name_pvd() const
